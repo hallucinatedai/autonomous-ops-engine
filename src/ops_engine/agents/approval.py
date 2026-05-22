@@ -1,6 +1,6 @@
 """Approval agent - human-in-the-loop approval with context and recommendations."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -73,7 +73,7 @@ class ApprovalAgent(BaseAgent):
 
         request.status = ApprovalStatus.APPROVED if approved else ApprovalStatus.REJECTED
         request.decision_reason = reason
-        request.resolved_at = datetime.utcnow()
+        request.resolved_at = datetime.now(UTC)
 
         del self._pending_approvals[approval_id]
         return request

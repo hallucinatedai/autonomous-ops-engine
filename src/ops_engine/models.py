@@ -1,6 +1,6 @@
 """Pydantic models for the Autonomous Ops Engine."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
@@ -89,8 +89,8 @@ class Workflow(BaseModel):
     steps: list[WorkflowStep] = Field(default_factory=list)
     status: WorkflowStatus = WorkflowStatus.PENDING
     created_by: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -117,7 +117,7 @@ class ApprovalRequest(BaseModel):
     recommendation: str = ""
     status: ApprovalStatus = ApprovalStatus.PENDING
     decision_reason: str = ""
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     resolved_at: datetime | None = None
 
 
@@ -130,7 +130,7 @@ class AuditEvent(BaseModel):
     event_type: str
     agent_type: AgentType | None = None
     details: dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class WorkflowSubmission(BaseModel):

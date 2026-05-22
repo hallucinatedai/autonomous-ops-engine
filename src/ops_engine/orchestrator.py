@@ -1,6 +1,6 @@
 """Central workflow orchestration engine."""
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -65,7 +65,7 @@ class Orchestrator:
             raise ValueError(f"Workflow {workflow_id} not found")
 
         workflow.status = WorkflowStatus.RUNNING
-        workflow.updated_at = datetime.utcnow()
+        workflow.updated_at = datetime.now(UTC)
 
         audit_agent: AuditAgent = self._agents[AgentType.AUDIT]
         await audit_agent.log_event(
@@ -91,7 +91,7 @@ class Orchestrator:
         if all(s.status == StepStatus.COMPLETED for s in workflow.steps):
             workflow.status = WorkflowStatus.COMPLETED
 
-        workflow.updated_at = datetime.utcnow()
+        workflow.updated_at = datetime.now(UTC)
         self.memory.save_workflow(workflow)
 
         await audit_agent.log_event(
@@ -113,7 +113,7 @@ class Orchestrator:
             return {"error": step.error_message}
 
         step.status = StepStatus.RUNNING
-        step.started_at = datetime.utcnow()
+        step.started_at = datetime.now(UTC)
 
         step.input_data["workflow_id"] = str(workflow.id)
 
@@ -121,14 +121,14 @@ class Orchestrator:
         if not is_valid:
             step.status = StepStatus.FAILED
             step.error_message = "Step validation failed"
-            step.completed_at = datetime.utcnow()
+            step.completed_at = datetime.now(UTC)
             return {"error": step.error_message}
 
         try:
             result = await agent.execute(step)
             step.output_data = result
             step.status = StepStatus.COMPLETED
-            step.completed_at = datetime.utcnow()
+            step.completed_at = datetime.now(UTC)
             return result
         except Exception as e:
             step.retries += 1
@@ -138,7 +138,7 @@ class Orchestrator:
             else:
                 step.status = StepStatus.FAILED
                 step.error_message = f"Max retries exceeded: {e}"
-                step.completed_at = datetime.utcnow()
+                step.completed_at = datetime.now(UTC)
             return {"error": str(e)}
 
     async def rollback_workflow(self, workflow_id: UUID) -> Workflow:
@@ -158,7 +158,7 @@ class Orchestrator:
                 step.status = StepStatus.ROLLED_BACK
 
         workflow.status = WorkflowStatus.ROLLED_BACK
-        workflow.updated_at = datetime.utcnow()
+        workflow.updated_at = datetime.now(UTC)
         self.memory.save_workflow(workflow)
         return workflow
 
@@ -188,7 +188,7 @@ class Orchestrator:
                     step.output_data["decision"] = "rejected"
                     step.output_data["reason"] = reason
 
-        workflow.updated_at = datetime.utcnow()
+        workflow.updated_at = datetime.now(UTC)
         self.memory.save_workflow(workflow)
 
         audit_agent: AuditAgent = self._agents[AgentType.AUDIT]
