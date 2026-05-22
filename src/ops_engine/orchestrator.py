@@ -68,11 +68,12 @@ class Orchestrator:
         workflow.updated_at = datetime.now(UTC)
 
         audit_agent: AuditAgent = self._agents[AgentType.AUDIT]
-        await audit_agent.log_event(
+        event = await audit_agent.log_event(
             workflow_id=workflow.id,
             event_type="workflow_started",
             details={"workflow_name": workflow.name, "type": workflow.workflow_type.value},
         )
+        self.memory.save_audit_event(event)
 
         for step in workflow.steps:
             if not self._dependencies_met(step, workflow.steps):
@@ -94,11 +95,12 @@ class Orchestrator:
         workflow.updated_at = datetime.now(UTC)
         self.memory.save_workflow(workflow)
 
-        await audit_agent.log_event(
+        event = await audit_agent.log_event(
             workflow_id=workflow.id,
             event_type="workflow_completed",
             details={"final_status": workflow.status.value},
         )
+        self.memory.save_audit_event(event)
 
         return workflow
 
@@ -124,22 +126,24 @@ class Orchestrator:
             step.completed_at = datetime.now(UTC)
             return {"error": step.error_message}
 
-        try:
-            result = await agent.execute(step)
-            step.output_data = result
-            step.status = StepStatus.COMPLETED
-            step.completed_at = datetime.now(UTC)
-            return result
-        except Exception as e:
-            step.retries += 1
-            if step.retries < step.max_retries:
-                step.status = StepStatus.PENDING
-                step.error_message = f"Retry {step.retries}/{step.max_retries}: {e}"
-            else:
-                step.status = StepStatus.FAILED
-                step.error_message = f"Max retries exceeded: {e}"
+        while True:
+            try:
+                result = await agent.execute(step)
+                step.output_data = result
+                step.status = StepStatus.COMPLETED
                 step.completed_at = datetime.now(UTC)
-            return {"error": str(e)}
+                return result
+            except Exception as e:
+                step.retries += 1
+                if step.retries < step.max_retries:
+                    step.status = StepStatus.RUNNING
+                    step.error_message = f"Retry {step.retries}/{step.max_retries}: {e}"
+                    continue
+                else:
+                    step.status = StepStatus.FAILED
+                    step.error_message = f"Max retries exceeded: {e}"
+                    step.completed_at = datetime.now(UTC)
+                    return {"error": str(e)}
 
     async def rollback_workflow(self, workflow_id: UUID) -> Workflow:
         """Rollback a workflow by rolling back completed steps in reverse."""

@@ -43,6 +43,8 @@ class OperationalMemory:
                     input_data TEXT DEFAULT '{}',
                     output_data TEXT DEFAULT '{}',
                     error_message TEXT,
+                    depends_on TEXT DEFAULT '[]',
+                    step_order INTEGER NOT NULL DEFAULT 0,
                     started_at TEXT,
                     completed_at TEXT,
                     FOREIGN KEY (workflow_id) REFERENCES workflows(id)
@@ -105,13 +107,13 @@ class OperationalMemory:
                 ),
             )
 
-            for step in workflow.steps:
+            for idx, step in enumerate(workflow.steps):
                 conn.execute(
                     """
                     INSERT OR REPLACE INTO workflow_steps
                     (id, workflow_id, name, agent_type, status, input_data, output_data,
-                     error_message, started_at, completed_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     error_message, depends_on, step_order, started_at, completed_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         str(step.id),
@@ -122,6 +124,8 @@ class OperationalMemory:
                         json.dumps(step.input_data),
                         json.dumps(step.output_data),
                         step.error_message,
+                        json.dumps([str(d) for d in step.depends_on]),
+                        idx,
                         step.started_at.isoformat() if step.started_at else None,
                         step.completed_at.isoformat() if step.completed_at else None,
                     ),
@@ -146,11 +150,14 @@ class OperationalMemory:
             from ops_engine.models import AgentType, StepStatus, WorkflowStep, WorkflowType
 
             steps_rows = conn.execute(
-                "SELECT * FROM workflow_steps WHERE workflow_id = ?", (str(workflow_id),)
+                "SELECT * FROM workflow_steps WHERE workflow_id = ?"
+                " ORDER BY step_order ASC",
+                (str(workflow_id),),
             ).fetchall()
 
             steps = []
             for s in steps_rows:
+                depends_on_raw = s["depends_on"] if "depends_on" in s.keys() else "[]"
                 steps.append(
                     WorkflowStep(
                         id=UUID(s["id"]),
@@ -160,6 +167,7 @@ class OperationalMemory:
                         input_data=json.loads(s["input_data"]),
                         output_data=json.loads(s["output_data"]),
                         error_message=s["error_message"],
+                        depends_on=[UUID(d) for d in json.loads(depends_on_raw)],
                         started_at=(
                             datetime.fromisoformat(s["started_at"])
                             if s["started_at"]
