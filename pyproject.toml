@@ -41,3 +41,7 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]
