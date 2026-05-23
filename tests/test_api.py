@@ -64,19 +64,13 @@ class TestWorkflowEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_nonexistent_workflow(self, client: AsyncClient):
-        response = await client.get(
-            "/workflows/00000000-0000-0000-0000-000000000000"
-        )
+        response = await client.get("/workflows/00000000-0000-0000-0000-000000000000")
         assert response.status_code == 404
 
     @pytest.mark.asyncio
     async def test_list_workflows(self, client: AsyncClient):
-        await client.post(
-            "/workflows", json={"name": "WF1", "intent": "deploy"}
-        )
-        await client.post(
-            "/workflows", json={"name": "WF2", "intent": "incident alert"}
-        )
+        await client.post("/workflows", json={"name": "WF1", "intent": "deploy"})
+        await client.post("/workflows", json={"name": "WF2", "intent": "incident alert"})
 
         response = await client.get("/workflows")
         assert response.status_code == 200
@@ -85,9 +79,7 @@ class TestWorkflowEndpoints:
 
     @pytest.mark.asyncio
     async def test_list_workflows_with_status_filter(self, client: AsyncClient):
-        await client.post(
-            "/workflows", json={"name": "WF1", "intent": "deploy"}
-        )
+        await client.post("/workflows", json={"name": "WF1", "intent": "deploy"})
 
         response = await client.get("/workflows?status=pending")
         assert response.status_code == 200
@@ -113,9 +105,7 @@ class TestWorkflowEndpoints:
 
     @pytest.mark.asyncio
     async def test_execute_nonexistent_workflow(self, client: AsyncClient):
-        response = await client.post(
-            "/workflows/00000000-0000-0000-0000-000000000000/execute"
-        )
+        response = await client.post("/workflows/00000000-0000-0000-0000-000000000000/execute")
         assert response.status_code == 404
 
     @pytest.mark.asyncio
@@ -194,9 +184,7 @@ class TestAuditEndpoints:
 
     @pytest.mark.asyncio
     async def test_audit_nonexistent_workflow(self, client: AsyncClient):
-        response = await client.get(
-            "/workflows/00000000-0000-0000-0000-000000000000/audit"
-        )
+        response = await client.get("/workflows/00000000-0000-0000-0000-000000000000/audit")
         assert response.status_code == 404
 
 

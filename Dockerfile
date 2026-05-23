@@ -1,15 +1,15 @@
 # Build stage
-FROM python:3.11-alpine3.21@sha256:2028aa537a16aa0e455e330c4c30ef067ec18c47c7c1a1a9c5e27aa5263c4072 AS builder
+FROM python:3.11-alpine3.21@sha256:cc89153ee2e125296614f6a032cb473e2bc2c0203cbe2305c917ece8866e5b01 AS builder
 
 WORKDIR /build
 
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
 RUN pip install --no-cache-dir --prefix=/install .
 
 # Runtime stage
-FROM python:3.11-alpine3.21@sha256:2028aa537a16aa0e455e330c4c30ef067ec18c47c7c1a1a9c5e27aa5263c4072
+FROM python:3.11-alpine3.21@sha256:cc89153ee2e125296614f6a032cb473e2bc2c0203cbe2305c917ece8866e5b01
 
 WORKDIR /app
 

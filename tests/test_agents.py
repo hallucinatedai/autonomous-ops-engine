@@ -192,9 +192,7 @@ class TestAuditAgent:
     @pytest.mark.asyncio
     async def test_get_events_by_workflow(self, agent: AuditAgent):
         wf_id = uuid4()
-        await agent.log_event(
-            workflow_id=wf_id, event_type="test", details={"key": "value"}
-        )
+        await agent.log_event(workflow_id=wf_id, event_type="test", details={"key": "value"})
         events = agent.get_events(workflow_id=wf_id)
         assert len(events) == 1
         assert events[0].event_type == "test"

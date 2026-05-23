@@ -150,8 +150,7 @@ class OperationalMemory:
             from ops_engine.models import AgentType, StepStatus, WorkflowStep, WorkflowType
 
             steps_rows = conn.execute(
-                "SELECT * FROM workflow_steps WHERE workflow_id = ?"
-                " ORDER BY step_order ASC",
+                "SELECT * FROM workflow_steps WHERE workflow_id = ? ORDER BY step_order ASC",
                 (str(workflow_id),),
             ).fetchall()
 
@@ -169,14 +168,10 @@ class OperationalMemory:
                         error_message=s["error_message"],
                         depends_on=[UUID(d) for d in json.loads(depends_on_raw)],
                         started_at=(
-                            datetime.fromisoformat(s["started_at"])
-                            if s["started_at"]
-                            else None
+                            datetime.fromisoformat(s["started_at"]) if s["started_at"] else None
                         ),
                         completed_at=(
-                            datetime.fromisoformat(s["completed_at"])
-                            if s["completed_at"]
-                            else None
+                            datetime.fromisoformat(s["completed_at"]) if s["completed_at"] else None
                         ),
                     )
                 )
@@ -282,9 +277,7 @@ class OperationalMemory:
                         workflow_id=UUID(row["workflow_id"]),
                         step_id=UUID(row["step_id"]) if row["step_id"] else None,
                         event_type=row["event_type"],
-                        agent_type=(
-                            AgentType(row["agent_type"]) if row["agent_type"] else None
-                        ),
+                        agent_type=(AgentType(row["agent_type"]) if row["agent_type"] else None),
                         details=json.loads(row["details"]),
                         timestamp=datetime.fromisoformat(row["timestamp"]),
                     )
