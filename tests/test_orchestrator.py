@@ -44,18 +44,14 @@ class TestOrchestratorWorkflowCreation:
         assert workflow.workflow_type == WorkflowType.CUSTOM
 
     def test_workflow_has_ordered_steps(self, orchestrator: Orchestrator):
-        workflow = orchestrator.create_workflow(
-            name="Test", intent="deploy something"
-        )
+        workflow = orchestrator.create_workflow(name="Test", intent="deploy something")
         assert workflow.steps[0].name == "validate_input"
         assert workflow.steps[1].name == "route_workflow"
         assert workflow.steps[2].name == "request_approval"
         assert workflow.steps[3].name == "audit_log"
 
     def test_workflow_step_dependencies(self, orchestrator: Orchestrator):
-        workflow = orchestrator.create_workflow(
-            name="Test", intent="deploy something"
-        )
+        workflow = orchestrator.create_workflow(name="Test", intent="deploy something")
         assert workflow.steps[0].depends_on == []
         assert workflow.steps[1].depends_on == [workflow.steps[0].id]
         assert workflow.steps[2].depends_on == [workflow.steps[1].id]

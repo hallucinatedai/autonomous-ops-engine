@@ -104,9 +104,7 @@ class Orchestrator:
 
         return workflow
 
-    async def _execute_step(
-        self, workflow: Workflow, step: WorkflowStep
-    ) -> dict[str, Any]:
+    async def _execute_step(self, workflow: Workflow, step: WorkflowStep) -> dict[str, Any]:
         """Execute a single workflow step."""
         agent = self._agents.get(step.agent_type)
         if agent is None:
@@ -151,9 +149,7 @@ class Orchestrator:
         if workflow is None:
             raise ValueError(f"Workflow {workflow_id} not found")
 
-        completed_steps = [
-            s for s in workflow.steps if s.status == StepStatus.COMPLETED
-        ]
+        completed_steps = [s for s in workflow.steps if s.status == StepStatus.COMPLETED]
 
         for step in reversed(completed_steps):
             agent = self._agents.get(step.agent_type)
@@ -175,9 +171,7 @@ class Orchestrator:
             raise ValueError(f"Workflow {workflow_id} not found")
 
         if workflow.status != WorkflowStatus.AWAITING_APPROVAL:
-            raise ValueError(
-                f"Workflow is not awaiting approval (status: {workflow.status})"
-            )
+            raise ValueError(f"Workflow is not awaiting approval (status: {workflow.status})")
 
         if approved:
             workflow.status = WorkflowStatus.APPROVED
@@ -255,9 +249,7 @@ class Orchestrator:
 
         return steps
 
-    def _dependencies_met(
-        self, step: WorkflowStep, all_steps: list[WorkflowStep]
-    ) -> bool:
+    def _dependencies_met(self, step: WorkflowStep, all_steps: list[WorkflowStep]) -> bool:
         """Check if all dependencies for a step are met."""
         if not step.depends_on:
             return True

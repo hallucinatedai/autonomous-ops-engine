@@ -54,11 +54,7 @@ class ApprovalAgent(BaseAgent):
 
     async def rollback(self, step: WorkflowStep) -> bool:
         """Cancel any pending approval requests for this step."""
-        to_remove = [
-            aid
-            for aid, req in self._pending_approvals.items()
-            if req.step_id == step.id
-        ]
+        to_remove = [aid for aid, req in self._pending_approvals.items() if req.step_id == step.id]
         for aid in to_remove:
             del self._pending_approvals[aid]
         return True
